@@ -13,6 +13,8 @@ namespace Inputs
 
 		public string Name => _name;
 
+		public Guid Guid => _guid;
+
 		public static implicit operator InputKey(string name_id)
 		{
 			string[] split = name_id.Split("_");
