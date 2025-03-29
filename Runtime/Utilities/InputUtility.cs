@@ -125,6 +125,8 @@ namespace Inputs.Utilities
         {
             if (!Application.isPlaying) return;
 
+            InputSystem.Update();
+
             var device = LastDevice;
 
             if (Time.unscaledTime - _lastUpdateTime > 2)

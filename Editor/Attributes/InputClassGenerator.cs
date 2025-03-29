@@ -105,7 +105,9 @@ public class InputClassGenerator : AssetPostprocessor
                 var actionName = action.name.Replace(" ", "");
                 actionName = Regex.Replace(actionName, "\\[[^\\]]+\\]", "");
 
-                structMap.AddStaticReadonly(Protection.Public, nameof(InputKey), actionName, $"{mapName}/{actionName}_{action.id}");
+                structMap.AddConstant(Protection.Public, $"{actionName}_str", $"{mapName}/{actionName}_{action.id}");
+                structMap.AddStaticReadonly(Protection.Public, nameof(InputKey), actionName, (FieldName)$"{actionName}_str");
+                structMap.AddNewLine();
             }
 
             script.Body.AddBody(structMap);
@@ -180,6 +182,10 @@ public class InputClassGenerator : AssetPostprocessor
                 {
                     _text.Append($"{value}f");
                 }
+                else if (value is FieldName)
+                {
+                    _text.Append($"{value}");
+                }
                 else
                 {
                     _text.Append(value);
@@ -210,6 +216,13 @@ public class InputClassGenerator : AssetPostprocessor
 
 
         public void AddBody(Body body) => _text.Append($"{body.Code.Replace("\n", "\n\t")}\n\t");
+    }
+
+    private struct FieldName
+    {
+        public string value;
+        public static implicit operator FieldName(string value) => new FieldName { value = value };
+        public override string ToString() => value;
     }
 
     private struct Script

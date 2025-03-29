@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using Inputs.Attributes;
+using System.Reflection;
+using System;
 
 namespace Inputs
 {
@@ -41,14 +43,19 @@ namespace Inputs
 
         private static List<InputController> _enabledInputs = new List<InputController>();
 
+        private static Dictionary<IInputListener, InputListenerMethods> _totalListeners;
+
+        private HashSet<InputListenerMethods> _listenersHashSet;
+        private List<InputListenerMethods> _listeners;
+
         //private static InputActions Actions;
 
         [SerializeField][ReadOnly] State _state;
         public State State => _state;
 
-        public UnityEvent<InputActionReference, ButtonState> OnButton;
-        public UnityEvent<InputActionReference, Vector2> OnAxis2D;
-        public UnityEvent<InputActionReference, bool> OnTrigger;
+        public UnityEvent<InputActionReference, ButtonParams> OnButton;
+        public UnityEvent<InputActionReference, AxisParams> OnAxis2D;
+        public UnityEvent<InputActionReference, TriggerParams> OnTrigger;
 
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -58,6 +65,7 @@ namespace Inputs
             //Actions.Enable();
 
             _enabledInputs = new List<InputController>();
+            _totalListeners = new Dictionary<IInputListener, InputListenerMethods>();
 
             //foreach (var action in Actions.asset.actionMaps[0].actions)
             //{
@@ -74,6 +82,7 @@ namespace Inputs
             //        Debug.Log($"ui: {ctx.action.name}");
             //    };
             //}
+
 
         }
 
@@ -92,7 +101,7 @@ namespace Inputs
             {
                 _axis2D[i].action.performed += Axis2DPerformedCallback;
                 _axis2D[i].action.canceled += Axis2DPerformedCallback;
-                OnAxis2D?.Invoke(_axis2D[i], Vector2.zero);
+                OnAxis2D?.Invoke(_axis2D[i], new AxisParams(Vector2.zero));
             }
             for (int i = 0; i < _triggers.Count; i++)
             {
@@ -140,6 +149,47 @@ namespace Inputs
             }
 
             _enabledInputs.Remove(this);
+        }
+
+        private delegate void InputAxis(AxisParams axis);
+
+        public void RegisterListener(IInputListener listener)
+        {
+            //var del = 
+            //    from method in typeof(T)
+            //        .GetMethods(BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public)
+            //        .Where(m => m.GetCustomAttribute<InputAttribute>() != null)
+            //    let delegateType = typeof(InputAxis)
+            //    select Delegate.CreateDelegate(delegateType, listener, method);
+
+            //foreach (var d in del) d.DynamicInvoke(new Axis(131, 35131));
+
+            if (_listenersHashSet == null || _listeners == null)
+            {
+                _listenersHashSet = new HashSet<InputListenerMethods>();
+                _listeners = new List<InputListenerMethods>();
+            }
+
+            if (!_totalListeners.ContainsKey(listener))
+            {
+                _totalListeners[listener] = new InputListenerMethods(listener);
+            }
+
+            var l = _totalListeners[listener];
+
+            if (!_listenersHashSet.Contains(l))
+            {
+                _listeners.Add(l);
+                _listenersHashSet.Add(l);
+            }
+        }
+
+        public void UnregisterListener(IInputListener listener)
+        {
+            var l = _totalListeners[listener];
+            if (!_listenersHashSet.Contains(l)) return;
+            _listenersHashSet.Remove(l);
+            _listeners.Remove(l);
         }
 
         private bool HasControl(InputControl control)
@@ -205,16 +255,37 @@ namespace Inputs
             return true;
         }
 
+
+        private InputActionReference GetInputActionReference(Guid id, List<InputActionReference> list)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i].action.id == id)
+                {
+                    return list[i];
+                }
+            }
+            return null;
+        }
+
+
         private void ButtonPerformedCallback(InputAction.CallbackContext ctx)
         {
             if (!IsAllowedToWork(ctx)) return;
 
-            for (int i = 0; i < _buttons.Count; i++)
+            ButtonParams p = new ButtonParams { state = ctx.performed ? ButtonState.Down : ButtonState.Up };
+
+            var action = GetInputActionReference(ctx.action.id, _buttons);
+            OnButton?.Invoke(action, p);
+
+            if (_listeners == null) return;
+            for (int i = 0; i < _listeners.Count; i++)
             {
-                if (_buttons[i].action.id == ctx.action.id)
+                var listener = _listeners[i];
+                if (listener.buttonMethods == null) continue;
+                if (listener.buttonMethods.TryGetValue(ctx.action.id, out var methods))
                 {
-                    OnButton?.Invoke(_buttons[i], ctx.performed ? ButtonState.Down : ButtonState.Up);
-                    break;
+                    for (int j = 0; j < methods.Count; j++) methods[j](p);
                 }
             }
         }
@@ -223,38 +294,61 @@ namespace Inputs
         {
             if (!IsAllowedToWork(ctx)) return;
 
-            for (int i = 0; i < _axis2D.Count; i++)
+            var p = new AxisParams(ctx.ReadValue<Vector2>());
+
+            var action = GetInputActionReference(ctx.action.id, _axis2D);
+            OnAxis2D?.Invoke(action, p);
+
+            if (_listeners == null) return;
+            for (int i = 0; i < _listeners.Count; i++)
             {
-                if (_axis2D[i].action.id == ctx.action.id)
+                var listener = _listeners[i];
+                if (listener.axisMethods == null) continue;
+                if (listener.axisMethods.TryGetValue(ctx.action.id, out var methods))
                 {
-                    OnAxis2D?.Invoke(_axis2D[i], ctx.ReadValue<Vector2>());
-                    break;
+                    for (int j = 0; j < methods.Count; j++) methods[j](p);
                 }
             }
         }
+
         private void TriggerPerformedCallback(InputAction.CallbackContext ctx)
         {
             if (!IsAllowedToWork(ctx)) return;
 
-            for (int i = 0; i < _triggers.Count; i++)
+            var p = new TriggerParams { isDown = true };
+
+            var action = GetInputActionReference(ctx.action.id, _triggers);
+            OnTrigger?.Invoke(action, p);
+
+            if (_listeners == null) return;
+            for (int i = 0; i < _listeners.Count; i++)
             {
-                if (_triggers[i].action.id == ctx.action.id)
+                var listener = _listeners[i];
+                if (listener.triggerMethods == null) continue;
+                if (listener.triggerMethods.TryGetValue(ctx.action.id, out var methods))
                 {
-                    OnTrigger?.Invoke(_triggers[i], true);
-                    break;
+                    for (int j = 0; j < methods.Count; j++) methods[j](p);
                 }
             }
         }
+
         private void TriggerCanceledCallback(InputAction.CallbackContext ctx)
         {
             if (!IsAllowedToWork(ctx)) return;
 
-            for (int i = 0; i < _triggers.Count; i++)
+            var p = new TriggerParams { isDown = false };
+
+            var action = GetInputActionReference(ctx.action.id, _triggers);
+            OnTrigger?.Invoke(action, p);
+
+            if (_listeners == null) return;
+            for (int i = 0; i < _listeners.Count; i++)
             {
-                if (_triggers[i].action.id == ctx.action.id)
+                var listener = _listeners[i];
+                if (listener.triggerMethods == null) continue;
+                if (listener.triggerMethods.TryGetValue(ctx.action.id, out var methods))
                 {
-                    OnTrigger?.Invoke(_triggers[i], false);
-                    break;
+                    for (int j = 0; j < methods.Count; j++) methods[j](p);
                 }
             }
         }
