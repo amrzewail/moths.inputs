@@ -35,15 +35,14 @@ namespace Inputs
         [SerializeField] int _priority = 0;
 
         [SerializeField] Device _enabledDevices = Device.Keyboard | Device.Gamepad;
+        [SerializeField] State _state;
+
         [SerializeField] List<InputActionReference> _axis2D;
         [SerializeField] List<InputActionReference> _buttons;
         [SerializeField] List<InputActionReference> _triggers;
 
         private static List<InputController> _enabledInputs = new List<InputController>();
 
-        //private static InputActions Actions;
-
-        [SerializeField][ReadOnly] State _state;
         public State State => _state;
 
         public UnityEvent<InputActionReference, ButtonState> OnButton;
