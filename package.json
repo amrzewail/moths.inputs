@@ -14,7 +14,7 @@
     "url": "https://github.com/amrzewail"
   },
   "dependencies": {
-    "com.moths.core": "https://github.com/amrzewail/moths.core.git#main"
+    "com.moths.core": "https://github.com/amrzewail/moths.core.git"
   },
   "changelog": {
     "1.0.0": "- Initial release"
