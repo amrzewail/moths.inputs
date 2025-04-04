@@ -125,7 +125,10 @@ namespace Inputs.Utilities
         {
             if (!Application.isPlaying) return;
 
-            InputSystem.Update();
+            if (InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsManually)
+            {
+                InputSystem.Update();
+            }
 
             var device = LastDevice;
 
