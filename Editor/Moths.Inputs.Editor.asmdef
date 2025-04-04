@@ -1,11 +1,13 @@
 {
-    "name": "Inputs",
+    "name": "Moths.Inputs.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:75469ad4d38634e559750d17036d5f7c",
-        "GUID:3c4641a474dbe544aafa49297e96ae9e"
+        "GUID:35fab4f1436684a43b04798245d4c4bd",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
