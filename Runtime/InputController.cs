@@ -155,14 +155,7 @@ namespace Moths.Inputs
 
         public void RegisterListener(IInputListener listener)
         {
-            //var del = 
-            //    from method in typeof(T)
-            //        .GetMethods(BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public)
-            //        .Where(m => m.GetCustomAttribute<InputAttribute>() != null)
-            //    let delegateType = typeof(InputAxis)
-            //    select Delegate.CreateDelegate(delegateType, listener, method);
-
-            //foreach (var d in del) d.DynamicInvoke(new Axis(131, 35131));
+            if (_totalListeners == null) return;
 
             if (_listenersHashSet == null || _listeners == null)
             {
@@ -186,6 +179,7 @@ namespace Moths.Inputs
 
         public void UnregisterListener(IInputListener listener)
         {
+            if (_totalListeners == null) return;
             var l = _totalListeners[listener];
             if (!_listenersHashSet.Contains(l)) return;
             _listenersHashSet.Remove(l);
