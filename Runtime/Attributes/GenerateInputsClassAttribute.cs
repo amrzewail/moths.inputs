@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Inputs.Attributes
+namespace Moths.Inputs.Attributes
 {
 
     [AttributeUsage(AttributeTargets.Class)]

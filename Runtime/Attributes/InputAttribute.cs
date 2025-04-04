@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
-using static Inputs.InputController;
+using static Moths.Inputs.InputController;
 
-namespace Inputs
+namespace Moths.Inputs
 {
     public enum InputType
     {

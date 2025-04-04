@@ -1,8 +1,8 @@
 using UnityEditor;
 using UnityEngine;
-using Inputs.Attributes;
+using Moths.Inputs.Attributes;
 
-namespace GameInputs.Editor.Attributes
+namespace Moths.Inputs.Editor.Attributes
 {
 
     [CustomPropertyDrawer(typeof(Inputs.Attributes.ReadOnlyAttribute))]

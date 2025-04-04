@@ -1,7 +1,7 @@
-﻿using Inputs.Attributes;
+﻿using Moths.Inputs.Attributes;
 using System.Collections.Generic;
 
-namespace Inputs
+namespace Moths.Inputs
 {
     [System.Serializable]
     public struct Map

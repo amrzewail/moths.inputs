@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace Inputs.Attributes
+namespace Moths.Inputs.Attributes
 {
     public class ReadOnlyAttribute : PropertyAttribute
     {

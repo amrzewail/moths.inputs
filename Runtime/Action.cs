@@ -1,8 +1,8 @@
 ﻿using UnityEngine.InputSystem;
 
-using Inputs.Attributes;
+using Moths.Inputs.Attributes;
 
-namespace Inputs
+namespace Moths.Inputs
 {
     [System.Serializable]
     public struct Action

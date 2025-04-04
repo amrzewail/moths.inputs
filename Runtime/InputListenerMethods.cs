@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using static Inputs.InputController;
+using static Moths.Inputs.InputController;
 
-namespace Inputs
+namespace Moths.Inputs
 {
     public struct AxisParams
     {

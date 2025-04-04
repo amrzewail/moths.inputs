@@ -1,7 +1,7 @@
 using System.Reflection;
 using UnityEngine;
 
-namespace Inputs
+namespace Moths.Inputs
 {
     public interface IInputListener 
     {

@@ -11,7 +11,7 @@ using UnityEngine.InputSystem.Users;
 using UnityEngine.LowLevel;
 using UnityEngine.PlayerLoop;
 
-namespace Inputs.Utilities
+namespace Moths.Inputs.Utilities
 {
     public static class InputUtility
     {

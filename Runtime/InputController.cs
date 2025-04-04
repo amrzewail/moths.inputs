@@ -3,11 +3,12 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
-using Inputs.Attributes;
+using Moths.Inputs.Attributes;
 using System.Reflection;
 using System;
+using Moths.Attributes;
 
-namespace Inputs
+namespace Moths.Inputs
 {
     public enum State
     {

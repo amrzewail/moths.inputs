@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 
-namespace Inputs.Processors
+namespace Moths.Inputs.Processors
 {
 
 #if UNITY_EDITOR

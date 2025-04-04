@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Inputs
+namespace Moths.Inputs
 {
     [System.Serializable]
     public struct BindingPath

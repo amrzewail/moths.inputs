@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
-namespace Inputs.Editor
+namespace Moths.Inputs.Editor
 {
     [CustomPropertyDrawer(typeof(BindingPath))]
     public class BindingPathPropertyEditor : PropertyDrawer

@@ -1,12 +1,12 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Inputs.Utilities;
+using Moths.Inputs.Utilities;
 
-namespace Inputs
+using Moths.Attributes;
+
+namespace Moths.Inputs
 {
     [CreateAssetMenu(menuName = "ScriptableObjects/Inputs/Input Overrides")]
     [PreserveScriptableObject]
