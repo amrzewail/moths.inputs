@@ -97,7 +97,7 @@ namespace Moths.Inputs.Utilities
         {
             InputDeviceChanged = null;
 
-            var defaultSystems = PlayerLoop.GetDefaultPlayerLoop();
+            var defaultSystems = PlayerLoop.GetCurrentPlayerLoop();
             var updateSystem = FindSubSystem(defaultSystems, typeof(PostLateUpdate.InputEndFrame));
 
             if (updateSystem.subSystemList == null) updateSystem.subSystemList = new PlayerLoopSystem[0];
