@@ -218,15 +218,17 @@ namespace Moths.Inputs
             return false;
         }
 
-        private bool IsAllowedToWork(InputAction.CallbackContext ctx)
+        private bool IsEnabled(InputAction.CallbackContext ctx)
         {
             if (_state == State.Disabled) return false;
-
             if (_enabledInputs.Count == 0) return false;
-
             if ((ctx.control.device is Keyboard || ctx.control.device is Mouse) && !_enabledDevices.HasFlag(Device.Keyboard)) return false;
             if (ctx.control.device is Gamepad && !_enabledDevices.HasFlag(Device.Gamepad)) return false;
+            return true;
+        }
 
+        private bool IsOverriden(InputAction.CallbackContext ctx)
+        {
             int myIndex = -1;
             for (int i = 0; i < _enabledInputs.Count; i++)
             {
@@ -237,18 +239,17 @@ namespace Moths.Inputs
                 }
                 else
                 {
-                    if (_enabledInputs[i].State == State.Enabled) return false;
+                    if (_enabledInputs[i].State == State.Enabled) return true;
 
                     if (_enabledInputs[i].State == State.Mask)
                     {
-                        if (_enabledInputs[i].HasControl(ctx.control)) return false;
+                        if (_enabledInputs[i].HasControl(ctx.control)) return true;
                     }
                 }
             }
 
-            return true;
+            return false;
         }
-
 
         private InputActionReference GetInputActionReference(Guid id, List<InputActionReference> list)
         {
@@ -262,10 +263,37 @@ namespace Moths.Inputs
             return null;
         }
 
+        private void Axis2DPerformedCallback(InputAction.CallbackContext ctx)
+        {
+            if (!IsEnabled(ctx)) return;
+
+            Vector2 axis = default;
+
+            if (!IsOverriden(ctx))
+            {
+                axis = ctx.ReadValue<Vector2>();
+            }
+
+            var p = new AxisParams(axis);
+
+            var action = GetInputActionReference(ctx.action.id, _axis2D);
+            OnAxis2D?.Invoke(action, p);
+
+            if (_listeners == null) return;
+            for (int i = 0; i < _listeners.Count; i++)
+            {
+                var listener = _listeners[i];
+                if (listener.axisMethods == null) continue;
+                if (listener.axisMethods.TryGetValue(ctx.action.id, out var methods))
+                {
+                    for (int j = 0; j < methods.Count; j++) methods[j](p);
+                }
+            }
+        }
 
         private void ButtonPerformedCallback(InputAction.CallbackContext ctx)
         {
-            if (!IsAllowedToWork(ctx)) return;
+            if (!IsEnabled(ctx) || IsOverriden(ctx)) return;
 
             ButtonParams p = new ButtonParams { state = ctx.performed ? ButtonState.Down : ButtonState.Up };
 
@@ -284,30 +312,9 @@ namespace Moths.Inputs
             }
         }
 
-        private void Axis2DPerformedCallback(InputAction.CallbackContext ctx)
-        {
-            if (!IsAllowedToWork(ctx)) return;
-
-            var p = new AxisParams(ctx.ReadValue<Vector2>());
-
-            var action = GetInputActionReference(ctx.action.id, _axis2D);
-            OnAxis2D?.Invoke(action, p);
-
-            if (_listeners == null) return;
-            for (int i = 0; i < _listeners.Count; i++)
-            {
-                var listener = _listeners[i];
-                if (listener.axisMethods == null) continue;
-                if (listener.axisMethods.TryGetValue(ctx.action.id, out var methods))
-                {
-                    for (int j = 0; j < methods.Count; j++) methods[j](p);
-                }
-            }
-        }
-
         private void TriggerPerformedCallback(InputAction.CallbackContext ctx)
         {
-            if (!IsAllowedToWork(ctx)) return;
+            if (!IsEnabled(ctx) || IsOverriden(ctx)) return;
 
             var p = new TriggerParams { isDown = true };
 
@@ -328,7 +335,7 @@ namespace Moths.Inputs
 
         private void TriggerCanceledCallback(InputAction.CallbackContext ctx)
         {
-            if (!IsAllowedToWork(ctx)) return;
+            if (!IsEnabled(ctx) || IsOverriden(ctx)) return;
 
             var p = new TriggerParams { isDown = false };
 
