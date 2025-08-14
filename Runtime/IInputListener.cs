@@ -5,7 +5,7 @@ namespace Moths.Inputs
 {
     public interface IInputListener 
     {
-        
-        
+        void OnInputLostFocus(InputController input) { }
+
     }
 }

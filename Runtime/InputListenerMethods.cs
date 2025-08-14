@@ -42,6 +42,8 @@ namespace Moths.Inputs
 
         private static Dictionary<Type, MethodInfo[]> _typeMethodCache = new Dictionary<Type, MethodInfo[]>();
 
+        public IInputListener Listener => _listener;
+
         public override int GetHashCode()
         {
             if (_listener == null) return 0;

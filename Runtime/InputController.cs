@@ -24,7 +24,6 @@ namespace Moths.Inputs
         Gamepad = 2,
     };
 
-
     [PreserveScriptableObject]
     [CreateAssetMenu(menuName = "ScriptableObjects/Inputs/Input Controller")]
     public partial class InputController : ScriptableObject
@@ -115,6 +114,14 @@ namespace Moths.Inputs
             }
 
             _enabledInputs.Sort((x, y) => x._priority.CompareTo(y._priority));
+
+            if (_enabledInputs[^1] == this)
+            {
+                for (int i = 0; i < _enabledInputs.Count - 1; i++)
+                {
+                    _enabledInputs[i].LostFocus();
+                }
+            }
         }
 
         public void MaskEnable()
@@ -218,6 +225,11 @@ namespace Moths.Inputs
             return false;
         }
 
+        private void LostFocus()
+        {
+            for (int i = 0; i < _listeners.Count; i++) _listeners[i].Listener.OnInputLostFocus(this);
+        }
+
         private bool IsEnabled(InputAction.CallbackContext ctx)
         {
             if (_state == State.Disabled) return false;
@@ -227,7 +239,7 @@ namespace Moths.Inputs
             return true;
         }
 
-        private bool IsOverriden(InputAction.CallbackContext ctx)
+        private bool IsOverriden(InputControl control)
         {
             int myIndex = -1;
             for (int i = 0; i < _enabledInputs.Count; i++)
@@ -243,7 +255,7 @@ namespace Moths.Inputs
 
                     if (_enabledInputs[i].State == State.Mask)
                     {
-                        if (_enabledInputs[i].HasControl(ctx.control)) return true;
+                        if (_enabledInputs[i].HasControl(control)) return true;
                     }
                 }
             }
@@ -265,14 +277,9 @@ namespace Moths.Inputs
 
         private void Axis2DPerformedCallback(InputAction.CallbackContext ctx)
         {
-            if (!IsEnabled(ctx)) return;
+            if (!IsEnabled(ctx) || IsOverriden(ctx.control)) return;
 
-            Vector2 axis = default;
-
-            if (!IsOverriden(ctx))
-            {
-                axis = ctx.ReadValue<Vector2>();
-            }
+            Vector2 axis = ctx.ReadValue<Vector2>();
 
             var p = new AxisParams(axis);
 
@@ -293,7 +300,7 @@ namespace Moths.Inputs
 
         private void ButtonPerformedCallback(InputAction.CallbackContext ctx)
         {
-            if (!IsEnabled(ctx) || IsOverriden(ctx)) return;
+            if (!IsEnabled(ctx) || IsOverriden(ctx.control)) return;
 
             ButtonParams p = new ButtonParams { state = ctx.performed ? ButtonState.Down : ButtonState.Up };
 
@@ -314,7 +321,7 @@ namespace Moths.Inputs
 
         private void TriggerPerformedCallback(InputAction.CallbackContext ctx)
         {
-            if (!IsEnabled(ctx) || IsOverriden(ctx)) return;
+            if (!IsEnabled(ctx) || IsOverriden(ctx.control)) return;
 
             var p = new TriggerParams { isDown = true };
 
@@ -335,7 +342,7 @@ namespace Moths.Inputs
 
         private void TriggerCanceledCallback(InputAction.CallbackContext ctx)
         {
-            if (!IsEnabled(ctx) || IsOverriden(ctx)) return;
+            if (!IsEnabled(ctx) || IsOverriden(ctx.control)) return;
 
             var p = new TriggerParams { isDown = false };
 
