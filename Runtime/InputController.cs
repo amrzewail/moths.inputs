@@ -60,28 +60,8 @@ namespace Moths.Inputs
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Initalize()
         {
-            //Actions = new InputActions();
-            //Actions.Enable();
-
             _enabledInputs = new List<InputController>();
             _totalListeners = new Dictionary<IInputListener, InputListenerMethods>();
-
-            //foreach (var action in Actions.asset.actionMaps[0].actions)
-            //{
-            //    action.performed += (InputAction.CallbackContext ctx) =>
-            //    {
-            //        Debug.Log($"gameplay: {ctx.action.name}");
-            //    };
-            //}
-
-            //foreach (var action in Actions.asset.actionMaps[1].actions)
-            //{
-            //    action.performed += (InputAction.CallbackContext ctx) =>
-            //    {
-            //        Debug.Log($"ui: {ctx.action.name}");
-            //    };
-            //}
-
 
         }
 
@@ -95,17 +75,20 @@ namespace Moths.Inputs
             {
                 _buttons[i].action.performed += ButtonPerformedCallback;
                 _buttons[i].action.canceled += ButtonPerformedCallback;
+                _buttons[i].action.Enable();
             }
             for (int i = 0; i < _axis2D.Count; i++)
             {
                 _axis2D[i].action.performed += Axis2DPerformedCallback;
                 _axis2D[i].action.canceled += Axis2DPerformedCallback;
                 OnAxis2D?.Invoke(_axis2D[i], new AxisParams(Vector2.zero));
+                _axis2D[i].action.Enable();
             }
             for (int i = 0; i < _triggers.Count; i++)
             {
                 _triggers[i].action.performed += TriggerPerformedCallback;
                 _triggers[i].action.canceled += TriggerCanceledCallback;
+                _triggers[i].action.Enable();
             }
 
             if (!_enabledInputs.Contains(this))
