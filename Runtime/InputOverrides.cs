@@ -8,7 +8,7 @@ using Moths.Attributes;
 
 namespace Moths.Inputs
 {
-    [CreateAssetMenu(menuName = "ScriptableObjects/Inputs/Input Overrides")]
+    [CreateAssetMenu(menuName = "Moths/Inputs/Input Overrides")]
     [PreserveScriptableObject]
     public class InputOverrides : ScriptableObject
     {

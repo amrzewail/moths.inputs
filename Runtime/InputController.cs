@@ -25,7 +25,7 @@ namespace Moths.Inputs
     };
 
     [PreserveScriptableObject]
-    [CreateAssetMenu(menuName = "ScriptableObjects/Inputs/Input Controller")]
+    [CreateAssetMenu(menuName = "Moths/Inputs/Input Controller")]
     public partial class InputController : ScriptableObject
     {
         public enum ButtonState 
