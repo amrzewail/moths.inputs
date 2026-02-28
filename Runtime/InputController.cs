@@ -1,11 +1,10 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
-using Moths.Inputs.Attributes;
-using System.Reflection;
-using System;
+
 using Moths.Attributes;
 
 namespace Moths.Inputs
@@ -28,7 +27,7 @@ namespace Moths.Inputs
     [CreateAssetMenu(menuName = "Moths/Inputs/Input Controller")]
     public partial class InputController : ScriptableObject
     {
-        public enum ButtonState 
+        public enum ButtonState
         {
             Down,
             Up,
@@ -38,13 +37,14 @@ namespace Moths.Inputs
 
         [SerializeField] Device _enabledDevices = Device.Keyboard | Device.Gamepad;
         [SerializeField] State _state;
+        [SerializeField] bool _cursorVisibility;
 
         [SerializeField] List<InputActionReference> _axis2D;
         [SerializeField] List<InputActionReference> _buttons;
         [SerializeField] List<InputActionReference> _triggers;
 
         private static List<InputController> _enabledInputs = new List<InputController>();
-
+        private static Dictionary<InputController, HashSet<object>> _owners = new();
         private static Dictionary<IInputListener, InputListenerMethods> _totalListeners;
 
         private HashSet<InputListenerMethods> _listenersHashSet;
@@ -57,20 +57,56 @@ namespace Moths.Inputs
         public UnityEvent<InputActionReference, TriggerParams> OnTrigger;
 
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Initalize()
         {
             _enabledInputs = new List<InputController>();
             _totalListeners = new Dictionary<IInputListener, InputListenerMethods>();
+            _owners = new();
 
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
 
-        public void Enable()
+        public void EnableAndRegister(IInputListener listener)
         {
+            RegisterListener(listener);
+            Enable(listener);
+        }
+
+        public void DisableAndUnregister(IInputListener listener)
+        {
+            Disable(listener);
+            UnregisterListener(listener);
+        }
+
+        public void Enable(UnityEngine.Object owner)
+        {
+            Enable((object)owner);
+        }
+
+        public void Disable(UnityEngine.Object owner)
+        {
+            Disable((object)owner);
+        }
+
+        public void MaskEnable(UnityEngine.Object owner)
+        {
+            MaskEnable((object)owner);
+        }
+
+        public void Enable(object owner)
+        {
+            Disable(owner);
+            if (!_owners.ContainsKey(this)) _owners[this] = new();
+            _owners[this].Add(owner);
+
+            if (_owners[this].Count > 1) return;
+
             if (_state == State.Enabled) return;
 
-            Disable();
             _state = State.Enabled;
+
             for (int i = 0; i < _buttons.Count; i++)
             {
                 _buttons[i].action.performed += ButtonPerformedCallback;
@@ -100,6 +136,7 @@ namespace Moths.Inputs
 
             if (_enabledInputs[^1] == this)
             {
+                RegainFocus();
                 for (int i = 0; i < _enabledInputs.Count - 1; i++)
                 {
                     _enabledInputs[i].LostFocus();
@@ -107,18 +144,23 @@ namespace Moths.Inputs
             }
         }
 
-        public void MaskEnable()
+        public void MaskEnable(object owner)
         {
             if (_state == State.Mask) return;
 
-            Disable();
-            Enable();
+            Disable(owner);
+            Enable(owner);
 
             _state = State.Mask;
         }
 
-        public void Disable()
+        public void Disable(object owner)
         {
+            if (!_owners.ContainsKey(this)) _owners[this] = new();
+            _owners[this].Remove(owner);
+
+            if (_owners[this].Count > 0) return;
+
             if (_state == State.Disabled) return;
 
             _state = State.Disabled;
@@ -129,6 +171,7 @@ namespace Moths.Inputs
             }
             for (int i = 0; i < _axis2D.Count; i++)
             {
+                OnAxis2D?.Invoke(_axis2D[i], new AxisParams(Vector2.zero));
                 _axis2D[i].action.performed -= Axis2DPerformedCallback;
                 _axis2D[i].action.canceled -= Axis2DPerformedCallback;
             }
@@ -138,7 +181,11 @@ namespace Moths.Inputs
                 _triggers[i].action.canceled -= TriggerCanceledCallback;
             }
 
+            bool wasActive = _enabledInputs[^1] == this;
+
             _enabledInputs.Remove(this);
+
+            if (wasActive && _enabledInputs.Count > 0) _enabledInputs[^1].RegainFocus();
         }
 
         private delegate void InputAxis(AxisParams axis);
@@ -169,11 +216,14 @@ namespace Moths.Inputs
 
         public void UnregisterListener(IInputListener listener)
         {
-            if (_totalListeners == null) return;
+            if (_totalListeners == null || _listenersHashSet == null) return;
+            if (!_totalListeners.ContainsKey(listener)) return;
             var l = _totalListeners[listener];
-            if (!_listenersHashSet.Contains(l)) return;
-            _listenersHashSet.Remove(l);
-            _listeners.Remove(l);
+            if (_listenersHashSet.Contains(l))
+            {
+                _listenersHashSet.Remove(l);
+                _listeners.Remove(l);
+            }
         }
 
         private bool HasControl(InputControl control)
@@ -211,6 +261,13 @@ namespace Moths.Inputs
         private void LostFocus()
         {
             for (int i = 0; i < _listeners.Count; i++) _listeners[i].Listener.OnInputLostFocus(this);
+        }
+
+        private void RegainFocus()
+        {
+            if (_cursorVisibility) Cursor.lockState = CursorLockMode.None;
+            else Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = _cursorVisibility;
         }
 
         private bool IsEnabled(InputAction.CallbackContext ctx)

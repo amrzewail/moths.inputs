@@ -1,23 +1,20 @@
 {
-  "name": "com.moths.inputs",
-  "displayName": "Moths Inputs",
-  "version": "1.0.0",
-  "unity": "2022.3",
-  "keywords": [
-    "moths",
-    "inputs",
-    "input-system"
-  ],
-  "author": {
-    "name": "Amr Zewail",
-    "email": "amrzewail@hotmail.com",
-    "url": "https://github.com/amrzewail"
-  },
-  "dependencies": {
-    "com.moths.core": "1.0.0"
-  },
-  "changelog": {
-    "1.0.0": "- Initial release"
-  },
-  "license": "MIT"
+	"name": "com.moths.inputs",
+	"displayName": "Moths Inputs",
+	"version": "1.0.0",
+	"unity": "2022.3",
+	"description": "",
+	"author": {
+		"name": "Amr Zewail",
+		"email": "amrzewail@hotmail.com",
+		"url": "https://github.com/amrzewail"
+	},
+	"dependencies": {
+	},
+	"changelog": {
+		"1.0.0": "- Initial release"
+	},
+	"samples": [
+	],
+	"license": "MIT"
 }
