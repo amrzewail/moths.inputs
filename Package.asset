@@ -13,15 +13,14 @@ MonoBehaviour:
   m_Name: Package
   m_EditorClassIdentifier: 
   _package:
-    name: com.moths.core
-    displayName: Moths Core
+    name: com.moths.inputs
+    displayName: Moths Inputs
     version:
       v0: 1
       v1: 0
       v2: 0
     unity: 1
-    description: The core package for the Moths framework, containing essential utilities
-      and classes used across Moths packages.
+    description: 
     author:
       name: Amr Zewail
       email: amrzewail@hotmail.com
@@ -33,8 +32,5 @@ MonoBehaviour:
         v1: 0
         v2: 0
       description: '- Initial release'
-    samples:
-    - displayName: Debugging Sample
-      description: 
-      path: Samples~/Debugging
+    samples: []
     license: 0

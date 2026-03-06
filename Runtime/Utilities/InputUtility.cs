@@ -2,12 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Users;
 using UnityEngine.LowLevel;
 using UnityEngine.PlayerLoop;
 
@@ -21,40 +17,6 @@ namespace Moths.Inputs.Utilities
         public static InputDevice LastDevice { get; private set; } = null;
 
         public static event Action<InputDevice> InputDeviceChanged;
-
-        public static void ParseInputStringToSpriteAsset(StringBuilder builder, InputOverrides overrides)
-        {
-            try
-            {
-                BindingPath bindingPath = builder.ToString();
-
-                if (string.IsNullOrEmpty(bindingPath.Scheme))
-                {
-                    if (LastDevice is Gamepad) bindingPath = new BindingPath("Controller", bindingPath.Action, bindingPath.Composite, bindingPath.Part);
-                    else bindingPath = new BindingPath("Keyboard", bindingPath.Action, bindingPath.Composite, bindingPath.Part);
-                }
-
-                string str = overrides.GetDirtyBinding(bindingPath).ToDisplayString();
-
-                if (bindingPath.Scheme == "Controller")
-                {
-                    if (LastDevice is UnityEngine.InputSystem.DualShock.DualShockGamepad)
-                    {
-                        str = $"<size=150%><sprite=\"dualshock\" name=\"{str}\"/></size>";
-                    }
-                    else
-                    {
-                        str = $"<size=150%><sprite=\"xbox\" name=\"{str}\"/></size>";
-                    }
-                }
-                builder.Clear();
-                builder.Append(str);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e);
-            }
-        }
 
         public static bool FindBinding(InputAction action, BindingPath bindingPath, out InputBinding binding,  out int index)
         {
@@ -95,7 +57,12 @@ namespace Moths.Inputs.Utilities
         [RuntimeInitializeOnLoadMethod]
         private static void AppStart()
         {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+            LastDevice = null;
             InputDeviceChanged = null;
+            _lastUpdateTime = float.MinValue;
 
             var defaultSystems = PlayerLoop.GetCurrentPlayerLoop();
             var updateSystem = FindSubSystem(defaultSystems, typeof(PostLateUpdate.InputEndFrame));
