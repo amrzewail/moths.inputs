@@ -39,6 +39,7 @@ namespace Moths.Inputs
         [SerializeField] State _state;
         [SerializeField] bool _cursorVisibility;
 
+        [SerializeField] List<InputActionReference> _axis;
         [SerializeField] List<InputActionReference> _axis2D;
         [SerializeField] List<InputActionReference> _buttons;
         [SerializeField] List<InputActionReference> _triggers;
@@ -52,8 +53,8 @@ namespace Moths.Inputs
 
         public State State => _state;
 
-        public UnityEvent<InputActionReference, ButtonParams> OnButton;
         public UnityEvent<InputActionReference, AxisParams> OnAxis2D;
+        public UnityEvent<InputActionReference, ButtonParams> OnButton;
         public UnityEvent<InputActionReference, TriggerParams> OnTrigger;
 
 
@@ -113,6 +114,14 @@ namespace Moths.Inputs
                 _buttons[i].action.canceled += ButtonPerformedCallback;
                 _buttons[i].action.Enable();
             }
+
+            for (int i = 0; i < _axis.Count; i++)
+            {
+                _axis[i].action.performed += AxisPerformedCallback;
+                _axis[i].action.canceled += AxisPerformedCallback;
+                OnAxis2D?.Invoke(_axis[i], new AxisParams(Vector2.zero));
+                _axis[i].action.Enable();
+            }
             for (int i = 0; i < _axis2D.Count; i++)
             {
                 _axis2D[i].action.performed += Axis2DPerformedCallback;
@@ -168,6 +177,12 @@ namespace Moths.Inputs
             {
                 _buttons[i].action.performed -= ButtonPerformedCallback;
                 _buttons[i].action.canceled -= ButtonPerformedCallback;
+            }
+            for (int i = 0; i < _axis.Count; i++)
+            {
+                OnAxis2D?.Invoke(_axis[i], new AxisParams(Vector2.zero));
+                _axis[i].action.performed -= AxisPerformedCallback;
+                _axis[i].action.canceled -= AxisPerformedCallback;
             }
             for (int i = 0; i < _axis2D.Count; i++)
             {
@@ -231,6 +246,15 @@ namespace Moths.Inputs
             for (int i = 0; i < _buttons.Count; i++)
             {
                 var controls = _buttons[i].action.controls;
+                for (int j = 0; j < controls.Count; j++)
+                {
+                    if (controls[j].device == control.device && controls[j].path == control.path) return true;
+                }
+            }
+
+            for (int i = 0; i < _axis.Count; i++)
+            {
+                var controls = _axis[i].action.controls;
                 for (int j = 0; j < controls.Count; j++)
                 {
                     if (controls[j].device == control.device && controls[j].path == control.path) return true;
@@ -315,6 +339,29 @@ namespace Moths.Inputs
             return null;
         }
 
+        private void AxisPerformedCallback(InputAction.CallbackContext ctx)
+        {
+            if (!IsEnabled(ctx) || IsOverriden(ctx.control)) return;
+
+            float axis = ctx.ReadValue<float>();
+
+            var p = new AxisParams(axis, axis);
+
+            var action = GetInputActionReference(ctx.action.id, _axis);
+            OnAxis2D?.Invoke(action, p);
+
+            if (_listeners == null) return;
+            for (int i = 0; i < _listeners.Count; i++)
+            {
+                var listener = _listeners[i];
+                if (listener.axisMethods == null) continue;
+                if (listener.axisMethods.TryGetValue(ctx.action.id, out var methods))
+                {
+                    for (int j = 0; j < methods.Count; j++) methods[j](p);
+                }
+            }
+        }
+
         private void Axis2DPerformedCallback(InputAction.CallbackContext ctx)
         {
             if (!IsEnabled(ctx) || IsOverriden(ctx.control)) return;
@@ -337,6 +384,7 @@ namespace Moths.Inputs
                 }
             }
         }
+
 
         private void ButtonPerformedCallback(InputAction.CallbackContext ctx)
         {
