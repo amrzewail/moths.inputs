@@ -18,39 +18,48 @@ namespace Moths.Inputs.Utilities
 
         public static event Action<InputDevice> InputDeviceChanged;
 
-        public static bool FindBinding(InputAction action, BindingPath bindingPath, out InputBinding binding,  out int index)
+        private static List<(InputBinding binding, int index)> BindingResults = new();
+
+        public static bool FindBinding(InputAction action, BindingPath bindingPath, out List<(InputBinding binding, int index)> bindingResults, bool firstOnly = false)
         {
-            index = -1;
-            binding = default;
+            BindingResults.Clear();
+
+            bindingResults = BindingResults;
+
             if (bindingPath.IsComposite)
             {
                 bool foundComposite = false;
                 for (int i = 0; i < action.bindings.Count; i++)
                 {
-                    binding = action.bindings[i];
+                    var binding = action.bindings[i];
                     if (binding.isComposite && binding.name == bindingPath.Composite) foundComposite = true;
                     if (!foundComposite) continue;
                     if (!binding.isPartOfComposite) continue;
                     if (binding.name.ToLower() != bindingPath.Part.ToLower()) continue;
                     if (!binding.groups.Contains(bindingPath.Scheme)) continue;
-                    index = i;
-                    return true;
+                    var index = i;
+
+                    BindingResults.Add((binding, index));
+
+                    if (firstOnly) return true;
                 }
             }
             else
             {
                 for (int i = 0; i < action.bindings.Count; i++)
                 {
-                    binding = action.bindings[i];
+                    var binding = action.bindings[i];
                     if (binding.groups.Contains(bindingPath.Scheme))
                     {
-                        index = i;
-                        return true;
+                        var index = i;
+                        BindingResults.Add((binding, index));
+
+                        if (firstOnly) return true;
                     }
                 }
             }
-            
-            return false;
+
+            return BindingResults.Count > 0;
         }
 
 

@@ -119,7 +119,7 @@ namespace Moths.Inputs
 
         public InputBinding GetDirtyBinding(BindingPath bindingPath)
         {
-            var action = FindAction(bindingPath);
+            var action = FindDirtyAction(bindingPath);
             if (action != null)
             {
                 if (action.bindings.Count != 0)
@@ -136,12 +136,40 @@ namespace Moths.Inputs
 
             action = asset.FindAction(bindingPath.Action);
 
-            if (InputUtility.FindBinding(action, bindingPath, out var binding, out int bindingIndex))
+            if (InputUtility.FindBinding(action, bindingPath, out var bindingResults, firstOnly: true))
             {
-                return binding;
+                return bindingResults[0].binding;
             }
 
             return default;
+        }
+
+        public void GetDirtyBindings(BindingPath bindingPath, List<InputBinding> results)
+        {
+            results.Clear();
+
+            var action = FindDirtyAction(bindingPath);
+            if (action != null)
+            {
+                if (action.bindings.Count != 0)
+                {
+                    results.Add(action.bindings[0]);
+                    return;
+                }
+            }
+
+            if (!asset)
+            {
+                Debug.LogError("Input Overrides: Asset not found");
+                return;
+            }
+
+            action = asset.FindAction(bindingPath.Action);
+
+            if (InputUtility.FindBinding(action, bindingPath, out var bindingResults))
+            {
+                for (int i = 0; i < bindingResults.Count; i++) results.Add(bindingResults[i].binding);
+            }
         }
 
 
@@ -271,7 +299,7 @@ namespace Moths.Inputs
 #endif
         }
 
-        private InputAction FindAction(BindingPath path)
+        private InputAction FindDirtyAction(BindingPath path)
         {
             var pathStr = path.ToString();
             for (int i = 0; i < dirtyOverrides.Count; i++)
