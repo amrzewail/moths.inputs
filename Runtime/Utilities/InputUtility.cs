@@ -126,7 +126,7 @@ namespace Moths.Inputs.Utilities
             if (LastDevice != device)
             {
                 InputDeviceChanged?.Invoke(LastDevice);
-                Debug.Log($"Input device changed to: {LastDevice.name}");
+                Debug.LogWarning($"Input device changed to: {LastDevice.name}");
             }
         }
 
